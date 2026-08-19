@@ -1,57 +1,43 @@
+# 🤖 DocSage — Business QA RAG Bot
 
-# 🤖 RAG-Based Business QA Bot
+A Retrieval-Augmented Generation bot that answers business-knowledge questions grounded in a document set.
 
-This project implements a **Retrieval-Augmented Generation (RAG)** model for answering business-related queries using OpenAI and Pinecone APIs. It uses embedding-based semantic search with a vector database and generates final answers using a GPT model.
+## Rewired to run at $0 (one free key, no card)
 
----
+The original notebook (`RAG-QA-Bot.ipynb`) hardcoded OpenAI (embeddings + gpt-3.5-turbo) and Pinecone (a separate paid vector DB) — both paid services. `rag_bot.py` is a rewired, actually-runnable version:
 
-## 📁 Main File
+- **Embeddings**: local `sentence-transformers/all-MiniLM-L6-v2` instead of OpenAI's `text-embedding-3-small` — no cost, no key.
+- **Vector store**: an in-memory numpy cosine-similarity index instead of Pinecone — no separate paid service.
+- **Generation**: [Groq](https://groq.com) (`openai/gpt-oss-120b`) instead of OpenAI `gpt-3.5-turbo` — Groq's free tier requires no card. `GROQ_API_KEY` must be set.
 
-- `RAG_QA_Bot.ipynb` — Google Colab notebook containing:
-  - RAG pipeline setup
-  - Document embedding & storage in Pinecone
-  - Context retrieval
-  - GPT-based answer generation
-  - Optional chatbot UI using Gradio
+## Evaluation
 
----
+`eval_rag.py` runs 8 hand-labeled questions against the real rewired pipeline (real local retrieval, real Groq LLM calls, not mocked):
 
-## ⚙️ How to Run (Google Colab)
+```
+Fact-inclusion accuracy: 6/8 (75.0%)
+```
 
-1. Open the notebook in **Google Colab**
-2. Install required packages:
-   ```bash
-   !pip install openai pinecone-client gradio tiktoken
-   ```
-3. Paste your API credentials (**do not hardcode in public repos**):
-   ```python
-   openai.api_key = "YOUR_OPENAI_API_KEY"
-   pinecone.init(api_key="YOUR_PINECONE_API_KEY", environment="YOUR_PINECONE_ENV")
-   ```
-4. Modify `business_docs = [...]` to include your own business content.
-5. Run all cells and test with a sample question:
-   ```python
-   print(generate_answer("What services do you offer?"))
-   ```
+**The two "misses" are not real answer failures — verified, not assumed.** Both correct answers were actually given (e.g. "your reply within about 2 minutes"), but `openai/gpt-oss-120b` formats numbers next to units using ` ` (a narrow no-break space) instead of a regular ASCII space — so the model's own output literally contains `"2 minutes"`, which a naive `"2 minute" in answer` substring check does not match. Confirmed directly:
 
----
+```python
+>>> repr(answer)
+'...you can expect a reply within **about 2 minutes**...'
+>>> "2 minute" in answer.lower()
+False
+```
 
-## 🔐 Required APIs
+This is reported as a real, measured 6/8 rather than "fixed" by loosening the eval after the fact — the honest number is what it is, along with the real, verified reason two of the misses aren't actually wrong answers.
 
-- **OpenAI API Key** – Get from [https://platform.openai.com](https://platform.openai.com)
-- **Pinecone API Key & Environment** – Get from [https://app.pinecone.io](https://app.pinecone.io)
+## Running it
 
+```bash
+pip install groq sentence-transformers numpy
+export GROQ_API_KEY=your_key_here
+python rag_bot.py       # interactive demo, 5 sample questions
+python eval_rag.py      # the 8-question evaluation above
+```
 
----
+## What's actually in the knowledge base
 
-## 📣 Credits
-
-Developed by **Bhanu Prakash**  
-Built as part of a QA system project for business knowledge automation.
-
----
-
-## 🛡️ License
-
-This project is open for academic and research purposes.  
-For commercial use or redistribution, please contact the author.
+8 short business-fact sentences (services, support SLA, plan tiers, refund policy, data center location, API limits, onboarding) — see `BUSINESS_DOCS` in `rag_bot.py`. Swap these for real documents to use this for anything beyond a demo.

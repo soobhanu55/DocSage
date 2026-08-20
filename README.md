@@ -1,4 +1,4 @@
-# 🤖 DocSage — Business QA RAG Bot
+# DocSage — Business QA RAG Bot
 
 A Retrieval-Augmented Generation bot that answers business-knowledge questions grounded in a document set.
 

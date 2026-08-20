@@ -10,6 +10,12 @@ The original notebook (`RAG-QA-Bot.ipynb`) hardcoded OpenAI (embeddings + gpt-3.
 - **Vector store**: an in-memory numpy cosine-similarity index instead of Pinecone — no separate paid service.
 - **Generation**: [Groq](https://groq.com) (`openai/gpt-oss-120b`) instead of OpenAI `gpt-3.5-turbo` — Groq's free tier requires no card. `GROQ_API_KEY` must be set.
 
+## Demo
+
+Terminal recording of the real evaluation — real local retrieval, real Groq LLM calls:
+
+![Terminal recording of the RAG evaluation](docs/demo.gif)
+
 ## Evaluation
 
 `eval_rag.py` runs 8 hand-labeled questions against the real rewired pipeline (real local retrieval, real Groq LLM calls, not mocked):
